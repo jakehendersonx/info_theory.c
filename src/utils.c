@@ -31,7 +31,7 @@ FileBuffer *read_file(const char *filename) {
   file_buff->data = malloc(file_buff->size);
   if (!file_buff->data) {
     perror("memory allocation error for file data");
-    fclose(file);
+    fclose(file); // this way because data is not set
     free(file_buff);
     return NULL;
   }
@@ -41,9 +41,31 @@ FileBuffer *read_file(const char *filename) {
   fclose(file);
   if (bytes_read != file_buff->size) {
     perror("error on file read");
-    free(file_buff->data);
-    free(file_buff);
+    free_file_buffer(file_buff);
     return NULL;
   }
   return file_buff;
+}
+// free file buffer and its data
+void free_file_buffer(FileBuffer *file_buff) {
+  if (file_buff) {
+    free(file_buff->data);
+    free(file_buff);
+  }
+}
+
+int write_file(const char *filename, const uint8_t *data, size_t size) {
+  FILE *file = fopen(filename, "wb");
+  if (!file) {
+    perror("error opening file for write");
+    return -1;
+  }
+  size_t bytes_written = fwrite(data, 1, size, file);
+  fclose(file);
+
+  if (bytes_written != size) {
+    perror("error on file write");
+    return -1;
+  }
+  return 0;
 }
